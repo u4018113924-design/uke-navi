@@ -785,6 +785,10 @@
   const dirList = document.getElementById("directionsList");
 
   routeBtn.addEventListener("click", computeRoute);
+  const mobileRouteBtn = document.getElementById("mobileRouteBtn");
+  if (mobileRouteBtn) {
+    mobileRouteBtn.addEventListener("click", computeRoute);
+  }
 
   swapBtn.addEventListener("click", () => {
     const tmpId = startCombo.getValue();
