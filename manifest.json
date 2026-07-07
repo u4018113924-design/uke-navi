@@ -1,0 +1,26 @@
+{
+  "name": "UKE Campus Navigation",
+  "short_name": "UKE Navi",
+  "description": "Interaktive Wegführung auf dem UKE-Gelände Hamburg-Eppendorf",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f0f4f9",
+  "theme_color": "#004b93",
+  "orientation": "any",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
