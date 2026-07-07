@@ -690,17 +690,6 @@
 
   function pickBuilding(building) {
     if (wasDragged) return;
-    const mode = document.querySelector(
-      'input[name="pickMode"]:checked'
-    ).value;
-    if (mode === "start") {
-      startCombo.setValue(building.node);
-      selectedStart = building.node;
-    } else {
-      targetCombo.setValue(building.node);
-      selectedTarget = building.node;
-    }
-    updateNodeHighlights();
     showBuildingInfo(building);
   }
 
