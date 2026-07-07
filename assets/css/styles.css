@@ -525,6 +525,11 @@ input:focus, select:focus, button:focus-visible {
   stroke-width: 2.5;
   transform: translateY(-1px);
 }
+.building.tap-flash {
+  opacity: 1;
+  stroke: rgba(26,115,232,.5);
+  stroke-width: 3;
+}
 .building-label {
   pointer-events: none;
   fill: #fff;
@@ -567,6 +572,14 @@ input:focus, select:focus, button:focus-visible {
   stroke-width: 3;
   r: 12 !important;
   filter: drop-shadow(0 2px 8px rgba(229,57,53,.4));
+}
+
+/* Invisible larger touch targets for nodes (mobile accessibility) */
+.node-touch-target {
+  fill: transparent;
+  stroke: none;
+  cursor: pointer;
+  r: 22;
 }
 
 .pin-label {
@@ -617,23 +630,23 @@ input:focus, select:focus, button:focus-visible {
 .external-title { fill: var(--uke-accent); font-size: 12px; font-weight: 800; }
 .external-text { fill: var(--text-muted); font-size: 10px; font-weight: 600; }
 
-/* ── Building Info Popup ───────────────────────────────────────── */
+/* ── Building Info Popup / Bottom Sheet ────────────────────────── */
 .building-info {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 100;
+  z-index: 200;
   width: 320px;
   padding: 20px 22px;
   background: var(--bg-card);
   border: 1px solid var(--border-glow);
   border-radius: 20px;
   box-shadow: 0 16px 50px rgba(0,25,60,.12);
-  animation: slideUp .3s ease;
+  animation: slideUp .3s cubic-bezier(.22,1,.36,1);
 }
 .building-info[hidden] { display: none; }
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .building-info-close {
@@ -702,7 +715,7 @@ input:focus, select:focus, button:focus-visible {
   box-shadow: 0 12px 40px rgba(0,25,60,.12);
   opacity: 0;
   transition: opacity .3s, transform .3s;
-  z-index: 999;
+  z-index: 500;
 }
 .toast.show {
   opacity: 1;
@@ -718,12 +731,59 @@ input:focus, select:focus, button:focus-visible {
 }
 @media (max-width: 1050px) {
   .layout { grid-template-columns: 1fr; }
+  .map-area  { order: -1; }           /* Karte zuerst auf Mobile */
   .map-viewport { height: 70vh; }
   .topbar { align-items: flex-start; flex-direction: column; }
   .mobile-action-bar {
     display: block;
     padding: 14px 4px 4px;
   }
+
+  /* Mode-Box auf Mobile ausblenden — Popup ersetzt das */
+  .mode-box { display: none; }
+
+  /* Building Info → Bottom Sheet */
+  .building-info {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 40px rgba(0,25,60,.15);
+    animation: slideUpSheet .35s cubic-bezier(.22,1,.36,1);
+  }
+  .building-info-actions {
+    gap: 10px;
+  }
+  .building-info-actions .compact-btn {
+    min-height: 52px !important;
+    font-size: .95rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* Sheet handle indicator */
+  .building-info::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(0,25,60,.12);
+    border-radius: 4px;
+    margin: 0 auto 16px;
+  }
+
+  /* Toast über Bottom Sheet */
+  .toast {
+    bottom: auto;
+    top: 80px;
+    z-index: 600;
+  }
+}
+@keyframes slideUpSheet {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 640px) {
   .app-shell { padding: 12px; }

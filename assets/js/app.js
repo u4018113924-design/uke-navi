@@ -328,11 +328,23 @@
     }
     svgRoot.appendChild(gBuildings);
 
-    // 4f) Nodes
+    // 4f) Nodes (with invisible touch targets for mobile)
     const gNodes = createSVGGroup("nodes-layer");
     for (const n of mapData.nodes) {
       const isExit = n.kind === "exit";
       const isParking = n.kind === "parking";
+
+      // Invisible larger touch target (rendered first = behind visible node)
+      const touchTarget = svgEl("circle", {
+        cx: n.x, cy: n.y,
+        r: 22,
+        class: "node-touch-target",
+        "data-node-touch": n.id,
+      });
+      touchTarget.addEventListener("click", () => pickNode(n));
+      gNodes.appendChild(touchTarget);
+
+      // Visible node circle
       const nodeClass = isParking ? "node parking" : isExit ? "node external" : "node";
       const circle = svgEl("circle", {
         cx: n.x, cy: n.y,
@@ -672,24 +684,39 @@
   let wasDragged = false;
   let dragStartPos = { x: 0, y: 0 };
   let currentActiveBuilding = null;
+  let currentActiveNode = null; // for node popup (mobile)
+  const isMobile = () => window.innerWidth < 1050;
 
   function pickNode(node) {
     if (wasDragged) return;
-    const mode = document.querySelector(
-      'input[name="pickMode"]:checked'
-    ).value;
-    if (mode === "start") {
-      startCombo.setValue(node.id);
-      selectedStart = node.id;
+
+    if (isMobile()) {
+      // On mobile: always show info popup with "Als Start" / "Als Ziel"
+      showNodeInfo(node);
     } else {
-      targetCombo.setValue(node.id);
-      selectedTarget = node.id;
+      // On desktop: use radio-button mode (existing behavior)
+      const mode = document.querySelector(
+        'input[name="pickMode"]:checked'
+      ).value;
+      if (mode === "start") {
+        startCombo.setValue(node.id);
+        selectedStart = node.id;
+      } else {
+        targetCombo.setValue(node.id);
+        selectedTarget = node.id;
+      }
+      updateNodeHighlights();
     }
-    updateNodeHighlights();
   }
 
   function pickBuilding(building) {
     if (wasDragged) return;
+    // Touch feedback flash
+    const rect = document.querySelector(`[data-building="${building.id}"]`);
+    if (rect) {
+      rect.classList.add("tap-flash");
+      setTimeout(() => rect.classList.remove("tap-flash"), 300);
+    }
     showBuildingInfo(building);
   }
 
@@ -710,8 +737,17 @@
   const infoId = document.getElementById("buildingInfoId");
   const infoAliases = document.getElementById("buildingInfoAliases");
 
+  const NODE_KIND_LABELS = {
+    crossing: "🔀 Wegkreuzung",
+    exit: "🚪 Ausgang / Eingang",
+    transport: "🚉 Haltestelle / Transport",
+    parking: "🅿️ Parkplatz",
+    path: "🚶 Wegpunkt",
+  };
+
   function showBuildingInfo(b) {
     currentActiveBuilding = b;
+    currentActiveNode = null;
     infoType.textContent = TYPE_LABELS[b.type] || TYPE_LABELS.building;
     infoType.className = `building-info-type t-${b.type}`;
     infoName.textContent = b.name;
@@ -723,26 +759,55 @@
     infoPanel.hidden = false;
   }
 
+  function showNodeInfo(node) {
+    currentActiveNode = node;
+    currentActiveBuilding = null;
+    infoType.textContent = NODE_KIND_LABELS[node.kind] || "📍 Kartenknoten";
+    infoType.className = "building-info-type t-service";
+    infoName.textContent = node.label;
+    infoId.textContent = `Knoten ${node.id}`;
+    infoAliases.textContent = "";
+    infoPanel.hidden = false;
+  }
+
   infoClose.addEventListener("click", () => {
     infoPanel.hidden = true;
   });
 
   document.getElementById("popupStartBtn").addEventListener("click", () => {
+    let nodeId = null;
+    let displayName = "";
     if (currentActiveBuilding) {
-      startCombo.setValue(currentActiveBuilding.node);
-      selectedStart = currentActiveBuilding.node;
+      nodeId = currentActiveBuilding.node;
+      displayName = currentActiveBuilding.id;
+    } else if (currentActiveNode) {
+      nodeId = currentActiveNode.id;
+      displayName = currentActiveNode.label;
+    }
+    if (nodeId) {
+      startCombo.setValue(nodeId);
+      selectedStart = nodeId;
       updateNodeHighlights();
-      showToast(`Start gesetzt: ${currentActiveBuilding.id}`);
+      showToast(`Start gesetzt: ${displayName}`);
       infoPanel.hidden = true;
     }
   });
 
   document.getElementById("popupTargetBtn").addEventListener("click", () => {
+    let nodeId = null;
+    let displayName = "";
     if (currentActiveBuilding) {
-      targetCombo.setValue(currentActiveBuilding.node);
-      selectedTarget = currentActiveBuilding.node;
+      nodeId = currentActiveBuilding.node;
+      displayName = currentActiveBuilding.id;
+    } else if (currentActiveNode) {
+      nodeId = currentActiveNode.id;
+      displayName = currentActiveNode.label;
+    }
+    if (nodeId) {
+      targetCombo.setValue(nodeId);
+      selectedTarget = nodeId;
       updateNodeHighlights();
-      showToast(`Ziel gesetzt: ${currentActiveBuilding.id}`);
+      showToast(`Ziel gesetzt: ${displayName}`);
       infoPanel.hidden = true;
     }
   });
